@@ -1,0 +1,18 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+# Extend GitLab SAST job to publish the report file as artifact to be used by other jobs
+sast:
+  tags:
+    - docker
+  artifacts:
+    paths:
+      - gl-sast-report.json
+
+sast-scan-defectdojo:
+  extends: .defectdojo_upload
+  needs: ["defectdojo_create_engagement", "sast"]
+  variables:
+    DEFECTDOJO_SCAN_TYPE: "GitLab SAST Scan"
+    DEFECTDOJO_SCAN_TEST_TYPE: "GitLab SAST Scan"
+    DEFECTDOJO_SCAN_FILE: "./gl-sast-report.json"

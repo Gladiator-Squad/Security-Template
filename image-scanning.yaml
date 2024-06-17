@@ -1,0 +1,18 @@
+include:
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+container_scanning:
+  stage: scan-image
+  tags:
+    - docker
+  rules:
+    # - if: '$CI_PIPELINE_SOURCE == "merge_request"'
+    - if: '$CI_COMMIT_BRANCH =~ /^(stg|stg-pro)$/'
+
+container-scan-defectdojo:
+  extends: .defectdojo_upload
+  needs: ["defectdojo_create_engagement", "container_scanning"]
+  variables:
+    DEFECTDOJO_SCAN_TYPE: "GitLab Container Scan"
+    DEFECTDOJO_SCAN_TEST_TYPE: "GitLab Container Scan"
+    DEFECTDOJO_SCAN_FILE: "./gl-container-scanning-report.json"

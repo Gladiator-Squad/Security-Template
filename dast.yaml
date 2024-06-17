@@ -1,0 +1,28 @@
+dast-zap-scan: 
+  stage: dast-scan
+  needs: ["python_migrate_process"]
+  image: ghcr.io/zaproxy/zaproxy:stable
+  variables:
+    ZAP_TARGET: $DAST_TARGET_URL
+  before_script:
+    - mkdir -p /zap/wrk
+  script:
+    - zap-baseline.py -I -t $ZAP_TARGET -g gen.conf -x zap-report.xml
+    - cp /zap/wrk/zap-report.xml $CI_PROJECT_DIR
+  artifacts:
+    paths:
+      - zap-report.xml
+  tags:
+    - docker
+  only:
+    - stg
+    - stg-pro
+
+dast-defectdojo:
+  extends: .defectdojo_upload
+  needs: ["defectdojo_create_engagement", "dast-zap-scan"]
+  variables:
+    DEFECTDOJO_SCAN_TYPE: "ZAP Scan"
+    DEFECTDOJO_SCAN_TEST_TYPE: "ZAP Scan"
+    DEFECTDOJO_SCAN_FILE: "./zap-report.xml"
+  allow_failure: true
